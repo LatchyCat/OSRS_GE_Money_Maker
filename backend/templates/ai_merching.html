@@ -1,0 +1,1013 @@
+{% extends "base.html" %}
+
+{% block title %}AI Merching Bot - Ultra-Smart Trading{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* Glassmorphism AI Trading Interface */
+    .chat-container {
+        display: flex;
+        flex-direction: column;
+        height: 85vh;
+        max-height: 85vh;
+        background: var(--glass-bg);
+        border-radius: 24px;
+        overflow: hidden;
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+        border: 1px solid var(--glass-border);
+        box-shadow: 0 20px 40px var(--glass-shadow);
+        position: relative;
+    }
+    
+    .chat-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: var(--primary-gradient);
+        opacity: 0.05;
+        z-index: -1;
+    }
+    
+    .chat-header {
+        padding: 25px 30px;
+        background: linear-gradient(135deg, rgba(79, 172, 254, 0.2) 0%, rgba(102, 126, 234, 0.3) 100%);
+        backdrop-filter: blur(30px);
+        -webkit-backdrop-filter: blur(30px);
+        color: var(--text-primary);
+        text-align: center;
+        border-bottom: 1px solid var(--glass-border);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .chat-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: conic-gradient(from 0deg, var(--accent-blue), var(--accent-purple), var(--accent-pink), var(--accent-blue));
+        opacity: 0.05;
+        animation: rotate 20s linear infinite;
+        z-index: -1;
+    }
+    
+    @keyframes rotate {
+        100% { transform: rotate(360deg); }
+    }
+    
+    .chat-header h2 {
+        margin: 0;
+        font-size: 1.8rem;
+        font-weight: 700;
+        background: var(--success-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        letter-spacing: -0.02em;
+    }
+    
+    .chat-header p {
+        margin: 8px 0 0 0;
+        color: var(--text-secondary);
+        font-size: 1rem;
+        font-weight: 400;
+    }
+    
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 25px;
+        scroll-behavior: smooth;
+        position: relative;
+    }
+    
+    .chat-messages::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .chat-messages::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    
+    .chat-messages::-webkit-scrollbar-thumb {
+        background: var(--glass-border);
+        border-radius: 3px;
+    }
+    
+    .chat-messages::-webkit-scrollbar-thumb:hover {
+        background: var(--accent-blue);
+    }
+    
+    .message {
+        margin-bottom: 24px;
+        animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px) scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+    
+    .message.user {
+        text-align: right;
+    }
+    
+    .message.assistant {
+        text-align: left;
+    }
+    
+    .message-bubble {
+        display: inline-block;
+        max-width: 85%;
+        padding: 18px 24px;
+        border-radius: 24px;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        word-wrap: break-word;
+        position: relative;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .message.user .message-bubble {
+        background: var(--primary-gradient);
+        color: var(--text-primary);
+        border-bottom-right-radius: 8px;
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .message.user .message-bubble:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+    }
+    
+    .message.assistant .message-bubble {
+        background: var(--glass-bg);
+        color: var(--text-primary);
+        border: 1px solid var(--glass-border);
+        border-bottom-left-radius: 8px;
+        box-shadow: 0 8px 25px var(--glass-shadow);
+    }
+    
+    .message.assistant .message-bubble:hover {
+        transform: translateY(-2px);
+        background: rgba(255, 255, 255, 0.12);
+        border-color: rgba(255, 255, 255, 0.25);
+        box-shadow: 0 12px 35px rgba(31, 38, 135, 0.5);
+    }
+    
+    .message-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 8px;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .message:hover .message-actions {
+        opacity: 1;
+    }
+    
+    .action-btn {
+        padding: 4px 8px;
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        color: var(--text-muted);
+        cursor: pointer;
+        font-size: 0.8rem;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }
+    
+    .action-btn:hover {
+        background: var(--accent-blue);
+        color: var(--text-primary);
+        transform: scale(1.05);
+    }
+    
+    .chat-suggestions {
+        padding: 20px 25px 0;
+        border-bottom: 1px solid var(--glass-border);
+        background: linear-gradient(135deg, rgba(79, 172, 254, 0.05) 0%, rgba(102, 126, 234, 0.08) 100%);
+    }
+    
+    .suggestions-header {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        margin-bottom: 12px;
+        font-weight: 500;
+    }
+    
+    .suggestion-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 15px;
+    }
+    
+    .suggestion-tag {
+        padding: 6px 12px;
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        color: var(--text-primary);
+        cursor: pointer;
+        font-size: 0.85rem;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+    }
+    
+    .suggestion-tag:hover {
+        background: rgba(79, 172, 254, 0.2);
+        border-color: var(--accent-blue);
+        transform: translateY(-1px);
+    }
+    
+    .chat-input-container {
+        padding: 25px 30px;
+        background: linear-gradient(135deg, rgba(79, 172, 254, 0.1) 0%, rgba(102, 126, 234, 0.15) 100%);
+        backdrop-filter: blur(30px);
+        -webkit-backdrop-filter: blur(30px);
+        border-top: 1px solid var(--glass-border);
+        position: relative;
+    }
+    
+    .chat-input-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--accent-blue), transparent);
+        opacity: 0.5;
+    }
+    
+    .chat-input-form {
+        display: flex;
+        gap: 15px;
+        align-items: flex-end;
+    }
+    
+    .chat-input {
+        flex: 1;
+        padding: 16px 24px;
+        border: 1px solid var(--glass-border);
+        border-radius: 24px;
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        color: var(--text-primary);
+        font-size: 1rem;
+        resize: none;
+        min-height: 52px;
+        max-height: 120px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        font-family: inherit;
+        box-shadow: inset 0 2px 4px rgba(31, 38, 135, 0.1);
+    }
+    
+    .chat-input::placeholder {
+        color: var(--text-muted);
+    }
+    
+    .chat-input:focus {
+        outline: none;
+        border-color: var(--accent-blue);
+        background: rgba(255, 255, 255, 0.12);
+        box-shadow: 
+            inset 0 2px 4px rgba(31, 38, 135, 0.1),
+            0 0 0 3px rgba(79, 172, 254, 0.1),
+            0 0 20px rgba(79, 172, 254, 0.2);
+        transform: translateY(-2px);
+    }
+    
+    .send-btn {
+        padding: 16px 24px;
+        background: var(--primary-gradient);
+        color: var(--text-primary);
+        border: none;
+        border-radius: 24px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        min-width: 100px;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .send-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.6s;
+    }
+    
+    .send-btn:hover::before {
+        left: 100%;
+    }
+    
+    .send-btn:hover:not(:disabled) {
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+    }
+    
+    .send-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+    }
+    
+    .opportunity-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        padding: 24px;
+        margin: 18px 0;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 8px 32px var(--glass-shadow);
+    }
+    
+    .opportunity-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: var(--success-gradient);
+        opacity: 0.03;
+        z-index: -1;
+    }
+    
+    .opportunity-card::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        transition: left 0.6s;
+    }
+    
+    .opportunity-card:hover::after {
+        left: 100%;
+    }
+    
+    .opportunity-card:hover {
+        transform: translateY(-5px) scale(1.02);
+        box-shadow: 0 20px 40px rgba(31, 38, 135, 0.4);
+        border-color: rgba(67, 233, 123, 0.4);
+        background: rgba(255, 255, 255, 0.12);
+    }
+    
+    .opportunity-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+    
+    .item-name {
+        font-weight: 700;
+        font-size: 1.2rem;
+        color: var(--success-color);
+    }
+    
+    .confidence-badge {
+        background: rgba(39, 174, 96, 0.2);
+        color: var(--success-color);
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    
+    .opportunity-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .detail-item {
+        text-align: center;
+        padding: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+    }
+    
+    .detail-label {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin-bottom: 5px;
+    }
+    
+    .detail-value {
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: var(--text-color);
+    }
+    
+    .profit-value {
+        color: var(--success-color);
+    }
+    
+    .risk-low {
+        color: var(--success-color);
+    }
+    
+    .risk-medium {
+        color: var(--warning-color);
+    }
+    
+    .risk-high {
+        color: var(--accent-color);
+    }
+    
+    .signal-card {
+        background: linear-gradient(135deg, rgba(52, 152, 219, 0.15), rgba(41, 128, 185, 0.08));
+        border: 1px solid rgba(52, 152, 219, 0.3);
+        border-radius: 12px;
+        padding: 15px;
+        margin: 10px 0;
+    }
+    
+    .signal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    
+    .signal-type {
+        font-weight: 600;
+        color: #3498db;
+    }
+    
+    .signal-strength {
+        padding: 3px 8px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    
+    .strength-strong {
+        background: rgba(39, 174, 96, 0.2);
+        color: var(--success-color);
+    }
+    
+    .strength-moderate {
+        background: rgba(243, 156, 18, 0.2);
+        color: var(--warning-color);
+    }
+    
+    .strength-weak {
+        background: rgba(52, 152, 219, 0.2);
+        color: #3498db;
+    }
+    
+    .typing-indicator {
+        display: none;
+        padding: 15px 20px;
+        color: var(--text-muted);
+        font-style: italic;
+    }
+    
+    .typing-dots {
+        display: inline-block;
+        animation: typingDots 1.4s infinite;
+    }
+    
+    @keyframes typingDots {
+        0%, 60% { opacity: 0; }
+        30% { opacity: 1; }
+    }
+    
+    .quick-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+    
+    .quick-btn {
+        padding: 10px 18px;
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        color: var(--text-primary);
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(31, 38, 135, 0.2);
+    }
+    
+    .quick-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(79, 172, 254, 0.2), transparent);
+        transition: left 0.6s;
+    }
+    
+    .quick-btn:hover::before {
+        left: 100%;
+    }
+    
+    .quick-btn:hover {
+        background: rgba(79, 172, 254, 0.15);
+        border-color: var(--accent-blue);
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 8px 25px rgba(79, 172, 254, 0.3);
+    }
+    
+    /* Mobile optimizations */
+    @media (max-width: 768px) {
+        .chat-container {
+            height: 90vh;
+        }
+        
+        .opportunity-details {
+            grid-template-columns: 1fr 1fr;
+        }
+        
+        .quick-actions {
+            justify-content: center;
+        }
+        
+        .message-bubble {
+            max-width: 95%;
+        }
+    }
+    
+    /* Performance optimization classes */
+    .gpu-boost {
+        transform: translateZ(0);
+        backface-visibility: hidden;
+        perspective: 1000px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h1>🧠 Ultra-Smart AI Merching Bot</h1>
+    <p>Get exact buy/sell prices with AI-powered market intelligence</p>
+</div>
+
+<div class="chat-container gpu-boost">
+    <div class="chat-header">
+        <h2>💰 Smart Trading Assistant</h2>
+        <p>Ask me: "I have 50M GP, what should I buy and sell for profit?"</p>
+    </div>
+    
+    <div class="chat-suggestions" id="chatSuggestions">
+        <div class="suggestions-header">💡 Try asking complex questions like:</div>
+        <div class="suggestion-tags">
+            <span class="suggestion-tag" onclick="sendQuickMessage('I have 50M GP, what can I buy under 2k to sell over 3k with 80%+ success rate?')">Specific Price Ranges</span>
+            <span class="suggestion-tag" onclick="sendQuickMessage('Show me 5 items with exact buy/sell prices and hold times under 4 hours')">Time-based Trading</span>
+            <span class="suggestion-tag" onclick="sendQuickMessage('What high-volume items have profit margins over 40% right now?')">Volume Analysis</span>
+            <span class="suggestion-tag" onclick="sendQuickMessage('I want to invest 200M GP in medium-risk items, give me a portfolio')">Portfolio Strategy</span>
+        </div>
+    </div>
+    
+    <div class="chat-messages" id="chatMessages">
+        <div class="message assistant">
+            <div class="message-bubble">
+                🧠 <strong>Ultra-Smart AI Merching Bot Ready!</strong><br><br>
+                I analyze real market data to give you:<br>
+                <br>
+                📊 <strong>Exact Prices:</strong> "Buy Dragon bones at 2.8k, sell at 3.2k"<br>
+                🎯 <strong>Success Rates:</strong> "92% probability of profit"<br>
+                ⏱️ <strong>Timing:</strong> "Hold for 4.2 hours for optimal profit"<br>
+                💰 <strong>Profit Margins:</strong> "Expected +400 GP per item (14.3%)"<br>
+                🛡️ <strong>Risk Levels:</strong> Low/Medium/High with detailed analysis<br>
+                <br>
+                <em>Ask me complex questions with specific GP amounts, timeframes, and risk preferences!</em>
+            </div>
+            <div class="message-actions">
+                <button class="action-btn" onclick="copyMessage(this)">📋 Copy</button>
+                <button class="action-btn" onclick="regenerateMessage(this)">🔄 Regenerate</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="typing-indicator" id="typingIndicator">
+        <span class="typing-dots">AI is analyzing market data...</span>
+    </div>
+    
+    <div class="chat-input-container">
+        <div class="quick-actions">
+            <button class="quick-btn" onclick="sendQuickMessage('I have 10M GP, what should I buy under 1k to sell over 1.5k?')">
+                💰 10M Strategy
+            </button>
+            <button class="quick-btn" onclick="sendQuickMessage('Show me low risk items with 50%+ profit margins')">
+                🛡️ Low Risk High Profit
+            </button>
+            <button class="quick-btn" onclick="sendQuickMessage('What items can I flip within 2 hours for guaranteed profit?')">
+                ⚡ Quick Flips
+            </button>
+            <button class="quick-btn" onclick="sendQuickMessage('I have 100M GP, show me medium risk high reward opportunities')">
+                🚀 High Capital Trades
+            </button>
+            <button class="quick-btn" onclick="sendQuickMessage('What are the most profitable items under 5k GP each?')">
+                💎 Budget Flips
+            </button>
+            <button class="quick-btn" onclick="sendQuickMessage('Show me items with 90%+ success rate and exact buy/sell prices')">
+                📊 Safe Bets
+            </button>
+        </div>
+        
+        <form class="chat-input-form" id="chatForm">
+            <textarea 
+                class="chat-input" 
+                id="messageInput" 
+                placeholder="Ask me about trading opportunities... (e.g., 'I have 50M GP, what should I buy at 1k to sell at 1.5k?')"
+                rows="1"></textarea>
+            <button type="submit" class="send-btn" id="sendBtn">
+                Send
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Memory-efficient JavaScript optimized for M1 MacBook
+class AITradingChat {
+    constructor() {
+        this.messagesContainer = document.getElementById('chatMessages');
+        this.messageInput = document.getElementById('messageInput');
+        this.sendBtn = document.getElementById('sendBtn');
+        this.typingIndicator = document.getElementById('typingIndicator');
+        this.isProcessing = false;
+        
+        this.initializeEventListeners();
+        this.setupAutoResize();
+    }
+    
+    initializeEventListeners() {
+        // Form submission
+        document.getElementById('chatForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.sendMessage();
+        });
+        
+        // Enter key handling (but allow Shift+Enter for new lines)
+        this.messageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                this.sendMessage();
+            }
+        });
+        
+        // Input event for auto-resize
+        this.messageInput.addEventListener('input', this.adjustTextareaHeight.bind(this));
+    }
+    
+    setupAutoResize() {
+        this.adjustTextareaHeight();
+    }
+    
+    adjustTextareaHeight() {
+        const textarea = this.messageInput;
+        textarea.style.height = 'auto';
+        const newHeight = Math.min(textarea.scrollHeight, 120);
+        textarea.style.height = newHeight + 'px';
+    }
+    
+    async sendMessage(message = null) {
+        const messageText = message || this.messageInput.value.trim();
+        
+        if (!messageText || this.isProcessing) return;
+        
+        this.isProcessing = true;
+        this.sendBtn.disabled = true;
+        this.sendBtn.textContent = 'Sending...';
+        
+        // Clear input if it's a typed message
+        if (!message) {
+            this.messageInput.value = '';
+            this.adjustTextareaHeight();
+        }
+        
+        // Add user message
+        this.addMessage(messageText, 'user');
+        
+        // Show typing indicator
+        this.showTypingIndicator();
+        
+        try {
+            // Send request to backend
+            const response = await fetch('/api/ai-trading-query/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': this.getCSRFToken()
+                },
+                body: JSON.stringify({
+                    query: messageText
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            // Hide typing indicator
+            this.hideTypingIndicator();
+            
+            // Add AI response
+            this.addAIResponse(data);
+            
+        } catch (error) {
+            console.error('Error:', error);
+            this.hideTypingIndicator();
+            this.addMessage('❌ Sorry, I encountered an error processing your request. Please try again.', 'assistant');
+        } finally {
+            this.isProcessing = false;
+            this.sendBtn.disabled = false;
+            this.sendBtn.textContent = 'Send';
+            this.messageInput.focus();
+        }
+    }
+    
+    addMessage(text, sender) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${sender}`;
+        
+        const bubbleDiv = document.createElement('div');
+        bubbleDiv.className = 'message-bubble';
+        bubbleDiv.innerHTML = this.formatMessage(text);
+        
+        messageDiv.appendChild(bubbleDiv);
+        
+        // Add message actions for AI responses
+        if (sender === 'assistant') {
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'message-actions';
+            actionsDiv.innerHTML = `
+                <button class="action-btn" onclick="copyMessage(this)">📋 Copy</button>
+                <button class="action-btn" onclick="regenerateMessage(this)">🔄 Regenerate</button>
+                <button class="action-btn" onclick="likeMessage(this)">👍 Helpful</button>
+            `;
+            messageDiv.appendChild(actionsDiv);
+        }
+        
+        this.messagesContainer.appendChild(messageDiv);
+        
+        // Scroll to bottom
+        this.scrollToBottom();
+    }
+    
+    addAIResponse(data) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'message assistant';
+        
+        const bubbleDiv = document.createElement('div');
+        bubbleDiv.className = 'message-bubble';
+        
+        let content = `🧠 <strong>AI Analysis:</strong><br><br>${data.response}`;
+        
+        // Add precision opportunities if available
+        if (data.precision_opportunities && data.precision_opportunities.length > 0) {
+            content += '<br><br>';
+            data.precision_opportunities.forEach(opp => {
+                content += this.formatPrecisionOpportunity(opp);
+            });
+        }
+        
+        // Add market signals if available
+        if (data.market_signals && data.market_signals.length > 0) {
+            content += '<br><br><strong>📊 Market Signals:</strong><br>';
+            data.market_signals.forEach(signal => {
+                content += this.formatMarketSignal(signal);
+            });
+        }
+        
+        bubbleDiv.innerHTML = content;
+        messageDiv.appendChild(bubbleDiv);
+        this.messagesContainer.appendChild(messageDiv);
+        
+        this.scrollToBottom();
+    }
+    
+    formatPrecisionOpportunity(opp) {
+        return `
+            <div class="opportunity-card">
+                <div class="opportunity-header">
+                    <div class="item-name">${opp.item_name}</div>
+                    <div class="confidence-badge">${opp.success_probability_pct}% Success</div>
+                </div>
+                <div class="opportunity-details">
+                    <div class="detail-item">
+                        <div class="detail-label">Current Price</div>
+                        <div class="detail-value">${formatGP(opp.current_price)}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Buy At</div>
+                        <div class="detail-value profit-value">${formatGP(opp.recommended_buy_price)}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Sell At</div>
+                        <div class="detail-value profit-value">${formatGP(opp.recommended_sell_price)}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Profit Per Item</div>
+                        <div class="detail-value profit-value">+${formatGP(opp.expected_profit_per_item)}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Risk Level</div>
+                        <div class="detail-value risk-${opp.risk_level.toLowerCase()}">${opp.risk_level.toUpperCase()}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Hold Time</div>
+                        <div class="detail-value">${opp.estimated_hold_time_hours.toFixed(1)}h</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    formatMarketSignal(signal) {
+        const strengthClass = signal.strength.toLowerCase().replace(' ', '-');
+        return `
+            <div class="signal-card">
+                <div class="signal-header">
+                    <div class="signal-type">${signal.signal_type.toUpperCase()}: ${signal.item_name}</div>
+                    <div class="signal-strength strength-${strengthClass}">${signal.strength}</div>
+                </div>
+                <div>${signal.reasoning}</div>
+                ${signal.target_price ? `<div><strong>Target:</strong> ${formatGP(signal.target_price)}</div>` : ''}
+            </div>
+        `;
+    }
+    
+    formatMessage(text) {
+        // Convert newlines to <br> tags
+        return text.replace(/\n/g, '<br>');
+    }
+    
+    showTypingIndicator() {
+        this.typingIndicator.style.display = 'block';
+        this.scrollToBottom();
+    }
+    
+    hideTypingIndicator() {
+        this.typingIndicator.style.display = 'none';
+    }
+    
+    scrollToBottom() {
+        // Use requestAnimationFrame for smooth scrolling
+        requestAnimationFrame(() => {
+            this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+        });
+    }
+    
+    getCSRFToken() {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            const [name, value] = cookie.trim().split('=');
+            if (name === 'csrftoken') {
+                return value;
+            }
+        }
+        return '';
+    }
+}
+
+// Quick message function
+function sendQuickMessage(message) {
+    if (window.aiChat) {
+        window.aiChat.sendMessage(message);
+    }
+}
+
+// Message action functions
+function copyMessage(button) {
+    const messageDiv = button.closest('.message');
+    const messageText = messageDiv.querySelector('.message-bubble').textContent;
+    
+    navigator.clipboard.writeText(messageText).then(() => {
+        // Visual feedback
+        const originalText = button.textContent;
+        button.textContent = '✅ Copied';
+        button.style.background = 'var(--accent-green)';
+        
+        setTimeout(() => {
+            button.textContent = originalText;
+            button.style.background = '';
+        }, 2000);
+    }).catch(() => {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = messageText;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        
+        button.textContent = '✅ Copied';
+        setTimeout(() => button.textContent = '📋 Copy', 2000);
+    });
+}
+
+function regenerateMessage(button) {
+    const messageDiv = button.closest('.message');
+    const previousUserMessage = messageDiv.previousElementSibling;
+    
+    if (previousUserMessage && previousUserMessage.classList.contains('user')) {
+        const userText = previousUserMessage.querySelector('.message-bubble').textContent;
+        
+        // Visual feedback
+        button.textContent = '🔄 Regenerating...';
+        button.disabled = true;
+        
+        if (window.aiChat) {
+            window.aiChat.sendMessage(userText);
+        }
+        
+        setTimeout(() => {
+            button.textContent = '🔄 Regenerate';
+            button.disabled = false;
+        }, 3000);
+    }
+}
+
+function likeMessage(button) {
+    const originalText = button.textContent;
+    button.textContent = '💚 Thanks!';
+    button.style.background = 'var(--accent-green)';
+    button.disabled = true;
+    
+    // Here you could send feedback to your analytics system
+    console.log('User liked AI response');
+    
+    setTimeout(() => {
+        button.textContent = originalText;
+        button.style.background = '';
+        button.disabled = false;
+    }, 3000);
+}
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    window.aiChat = new AITradingChat();
+    
+    // Performance monitoring for M1 MacBook
+    if ('performance' in window) {
+        const observer = new PerformanceObserver((list) => {
+            for (const entry of list.getEntries()) {
+                if (entry.duration > 100) {
+                    console.warn('Performance warning:', entry.name, entry.duration + 'ms');
+                }
+            }
+        });
+        observer.observe({ entryTypes: ['measure', 'navigation'] });
+    }
+});
+</script>
+{% endblock %}

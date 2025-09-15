@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Ultra-Smart OSRS Merchant Bot{% endblock %}</title>
+    
+    <!-- Optimized CSS for M1 MacBook performance -->
+    <style>
+        :root {
+            /* Glassmorphism Color Scheme */
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.18);
+            --glass-shadow: rgba(31, 38, 135, 0.37);
+            
+            /* Primary Colors */
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --warning-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            
+            /* Text Colors */
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.8);
+            --text-muted: rgba(255, 255, 255, 0.6);
+            --text-accent: #4facfe;
+            
+            /* Accent Colors */
+            --accent-blue: #4facfe;
+            --accent-purple: #667eea;
+            --accent-pink: #f093fb;
+            --accent-green: #43e97b;
+            --accent-orange: #ff9a56;
+            
+            /* Background */
+            --bg-primary: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            --bg-overlay: linear-gradient(135deg, rgba(30, 60, 114, 0.8) 0%, rgba(42, 82, 152, 0.8) 100%);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+            min-height: 100vh;
+            position: relative;
+        }
+        
+        /* Glassmorphism Background Elements */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 200, 255, 0.2) 0%, transparent 50%);
+            z-index: -1;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 30px;
+            background: var(--glass-bg);
+            border-radius: 24px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px var(--glass-shadow);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--primary-gradient);
+            opacity: 0.1;
+            z-index: -1;
+        }
+        
+        .header h1 {
+            background: var(--success-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2.8rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: none;
+            letter-spacing: -0.02em;
+        }
+        
+        .header p {
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            font-weight: 400;
+        }
+        
+        .card {
+            background: var(--glass-bg);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px var(--glass-shadow);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.6s;
+        }
+        
+        .card:hover::before {
+            left: 100%;
+        }
+        
+        .card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(31, 38, 135, 0.5);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        .btn {
+            background: var(--primary-gradient);
+            color: var(--text-primary);
+            border: none;
+            padding: 14px 28px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(31, 38, 135, 0.4);
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.6s;
+        }
+        
+        .btn:hover::before {
+            left: 100%;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: var(--secondary-gradient);
+        }
+        
+        .btn-secondary:hover {
+            box-shadow: 0 8px 25px rgba(240, 147, 251, 0.4);
+        }
+        
+        .btn-success {
+            background: var(--success-gradient);
+        }
+        
+        .btn-success:hover {
+            box-shadow: 0 8px 25px rgba(79, 172, 254, 0.4);
+        }
+        
+        .btn-warning {
+            background: var(--warning-gradient);
+        }
+        
+        .btn-warning:hover {
+            box-shadow: 0 8px 25px rgba(67, 233, 123, 0.4);
+        }
+        
+        .input-group {
+            margin-bottom: 24px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+        
+        .input-group input, .input-group textarea, .input-group select {
+            width: 100%;
+            padding: 16px 20px;
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: inset 0 2px 4px rgba(31, 38, 135, 0.1);
+        }
+        
+        .input-group input::placeholder,
+        .input-group textarea::placeholder {
+            color: var(--text-muted);
+        }
+        
+        .input-group input:focus, .input-group textarea:focus, .input-group select:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            background: rgba(255, 255, 255, 0.12);
+            box-shadow: 
+                inset 0 2px 4px rgba(31, 38, 135, 0.1),
+                0 0 0 3px rgba(79, 172, 254, 0.1),
+                0 0 20px rgba(79, 172, 254, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(233, 69, 96, 0.3);
+            border-left-color: var(--accent-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        
+        .alert-success {
+            background: rgba(39, 174, 96, 0.2);
+            border: 1px solid var(--success-color);
+            color: var(--success-color);
+        }
+        
+        .alert-warning {
+            background: rgba(243, 156, 18, 0.2);
+            border: 1px solid var(--warning-color);
+            color: var(--warning-color);
+        }
+        
+        .alert-danger {
+            background: rgba(233, 69, 96, 0.2);
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
+        }
+        
+        .grid {
+            display: grid;
+            gap: 20px;
+        }
+        
+        .grid-2 {
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        }
+        
+        .grid-3 {
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .card {
+                padding: 15px;
+            }
+        }
+        
+        /* Performance optimizations for M1 MacBook */
+        .gpu-accelerated {
+            transform: translateZ(0);
+            backface-visibility: hidden;
+            perspective: 1000px;
+        }
+        
+        /* Custom scrollbar for webkit browsers */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--primary-color);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-color);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #c0392b;
+        }
+    </style>
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <div class="container">
+        {% block content %}
+        <div class="header">
+            <h1>🤖 Ultra-Smart OSRS Merchant Bot</h1>
+            <p>AI-Powered Trading Assistant with Real-Time Market Intelligence</p>
+        </div>
+        {% endblock %}
+    </div>
+    
+    <!-- Optimized JavaScript for M1 MacBook -->
+    <script>
+        // Performance optimizations
+        const isTouch = 'ontouchstart' in window;
+        
+        // Efficient event delegation
+        document.addEventListener('click', function(e) {
+            if (e.target.matches('.btn')) {
+                e.target.style.transform = 'translateY(-1px) scale(0.98)';
+                setTimeout(() => {
+                    e.target.style.transform = '';
+                }, 150);
+            }
+        });
+        
+        // Memory-efficient animation frame handling
+        let animationId;
+        function optimizedAnimation() {
+            // Only run animations when tab is visible
+            if (document.visibilityState === 'visible') {
+                // Animation logic here
+            }
+            animationId = requestAnimationFrame(optimizedAnimation);
+        }
+        
+        // Start animations only when needed
+        document.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'visible') {
+                if (!animationId) optimizedAnimation();
+            } else {
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                    animationId = null;
+                }
+            }
+        });
+        
+        // Utility functions
+        function showLoading(element) {
+            if (element) {
+                element.style.display = 'block';
+            }
+        }
+        
+        function hideLoading(element) {
+            if (element) {
+                element.style.display = 'none';
+            }
+        }
+        
+        function formatGP(amount) {
+            if (amount >= 1000000) {
+                return (amount / 1000000).toFixed(1) + 'M GP';
+            } else if (amount >= 1000) {
+                return (amount / 1000).toFixed(1) + 'K GP';
+            }
+            return amount.toLocaleString() + ' GP';
+        }
+        
+        function showAlert(message, type = 'info') {
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            
+            const container = document.querySelector('.container');
+            if (container.firstChild) {
+                container.insertBefore(alert, container.firstChild);
+            } else {
+                container.appendChild(alert);
+            }
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        }
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
